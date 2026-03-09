@@ -1,6 +1,7 @@
 # Copyright contributors to the Terratorch project
 
 import logging
+import pickle
 
 import numpy as np
 import torch
@@ -117,3 +118,14 @@ class RandomForestClassificationTask(MultiLabelClassificationTask):
 
         self.model.decoder.fit(y_all)
         self.train_metrics.reset()
+
+    def on_save_checkpoint(self, checkpoint: dict) -> None:
+        super().on_save_checkpoint(checkpoint)
+        checkpoint["rf_model"] = pickle.dumps(self.model.decoder.rf)
+        checkpoint["rf_fitted"] = self.model.decoder._fitted
+
+    def on_load_checkpoint(self, checkpoint: dict) -> None:
+        super().on_load_checkpoint(checkpoint)
+        if "rf_model" in checkpoint:
+            self.model.decoder.rf = pickle.loads(checkpoint["rf_model"])
+            self.model.decoder._fitted = checkpoint.get("rf_fitted", True)
