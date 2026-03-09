@@ -121,7 +121,7 @@ class RandomForestClassificationTask(MultiLabelClassificationTask):
 
     def on_save_checkpoint(self, checkpoint: dict) -> None:
         super().on_save_checkpoint(checkpoint)
-        checkpoint["rf_model"] = pickle.dumps(self.model.decoder.rf)
+        checkpoint["rf_model"] = pickle.dumps(self.model.decoder.rf, protocol=4)
         checkpoint["rf_fitted"] = self.model.decoder._fitted
 
     def on_load_checkpoint(self, checkpoint: dict) -> None:
