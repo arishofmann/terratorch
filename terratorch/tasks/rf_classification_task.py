@@ -109,11 +109,11 @@ class RandomForestClassificationTask(MultiLabelClassificationTask):
     def on_train_epoch_end(self) -> None:
         if not self._y_buf:
             logger.warning("no labels accumulated, skipping fit")
-            super().on_train_epoch_end()
+            self.train_metrics.reset()
             return
 
         y_all = np.concatenate(self._y_buf, axis=0).astype(int)
         self._y_buf = []
 
         self.model.decoder.fit(y_all)
-        super().on_train_epoch_end()
+        self.train_metrics.reset()
