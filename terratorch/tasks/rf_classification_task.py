@@ -1,8 +1,9 @@
 # Copyright contributors to the Terratorch project
 
 import logging
-import pickle
+from pathlib import Path
 
+import joblib
 import numpy as np
 import torch
 from torch import Tensor, nn
@@ -121,11 +122,17 @@ class RandomForestClassificationTask(MultiLabelClassificationTask):
 
     def on_save_checkpoint(self, checkpoint: dict) -> None:
         super().on_save_checkpoint(checkpoint)
-        checkpoint["rf_model"] = pickle.dumps(self.model.decoder.rf, protocol=4)
+        rf_path = Path(self.trainer.log_dir) / "rf_model.joblib"
+        rf_path.parent.mkdir(parents=True, exist_ok=True)
+        joblib.dump(self.model.decoder.rf, rf_path, compress=3)
+        checkpoint["rf_model_path"] = str(rf_path)
         checkpoint["rf_fitted"] = self.model.decoder._fitted
+        logger.info("saved RF model to %s", rf_path)
 
     def on_load_checkpoint(self, checkpoint: dict) -> None:
         super().on_load_checkpoint(checkpoint)
-        if "rf_model" in checkpoint:
-            self.model.decoder.rf = pickle.loads(checkpoint["rf_model"])
+        if "rf_model_path" in checkpoint:
+            rf_path = checkpoint["rf_model_path"]
+            self.model.decoder.rf = joblib.load(rf_path)
             self.model.decoder._fitted = checkpoint.get("rf_fitted", True)
+            logger.info("loaded RF model from %s", rf_path)
