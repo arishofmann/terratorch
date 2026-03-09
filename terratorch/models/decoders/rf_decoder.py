@@ -83,7 +83,7 @@ class RandomForestDecoder(nn.Module):
             return torch.zeros(features.shape[0], self.num_classes, device=features.device)
 
         if not self._fitted:
-            raise RuntimeError("forward() called in eval mode before fit()")
+            return torch.zeros(features.shape[0], self.num_classes, device=features.device)
 
         proba = self._predict_proba(features_np)
         logits = self._proba_to_logits(proba)
