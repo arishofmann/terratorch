@@ -4,9 +4,10 @@ import logging
 
 import numpy as np
 import torch
-from torch import Tensor
+from torch import Tensor, nn
 
 from terratorch.models.decoders.rf_decoder import RandomForestDecoder
+from terratorch.models.model import AuxiliaryHead
 from terratorch.tasks.multilabel_classification_tasks import MultiLabelClassificationTask
 
 logger = logging.getLogger("terratorch")
@@ -27,11 +28,57 @@ class RandomForestClassificationTask(MultiLabelClassificationTask):
 
     automatic_optimization: bool = False
 
-    def __init__(self, *args, **kwargs) -> None:
-        kwargs["freeze_backbone"] = True
-        kwargs["freeze_decoder"] = True
-        kwargs.setdefault("loss", "bce")
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        model_args: dict,
+        model_factory: str | None = None,
+        model: nn.Module | None = None,
+        loss: str | list[str] | dict[str, float] | nn.Module = "bce",
+        aux_heads: list[AuxiliaryHead] | None = None,
+        aux_loss: dict[str, float] | None = None,
+        class_weights: list[float] | None = None,
+        ignore_index: int | None = -100,
+        custom_loss: bool = False,
+        custom_loss_kwargs: dict = None,
+        lr: float = 0.001,
+        optimizer: str | None = None,
+        optimizer_hparams: dict | None = None,
+        scheduler: str | None = None,
+        scheduler_hparams: dict | None = None,
+        freeze_backbone: bool = True,
+        freeze_decoder: bool = True,
+        freeze_head: bool = False,
+        plot_on_val: bool | int = False,
+        class_names: list[str] | None = None,
+        test_dataloaders_names: list[str] | None = None,
+        lr_overrides: dict[str, float] | None = None,
+        path_to_record_metrics: str = None,
+    ) -> None:
+        super().__init__(
+            model_args=model_args,
+            model_factory=model_factory,
+            model=model,
+            loss=loss,
+            aux_heads=aux_heads,
+            aux_loss=aux_loss,
+            class_weights=class_weights,
+            ignore_index=ignore_index,
+            custom_loss=custom_loss,
+            custom_loss_kwargs=custom_loss_kwargs,
+            lr=lr,
+            optimizer=optimizer,
+            optimizer_hparams=optimizer_hparams,
+            scheduler=scheduler,
+            scheduler_hparams=scheduler_hparams,
+            freeze_backbone=freeze_backbone,
+            freeze_decoder=freeze_decoder,
+            freeze_head=freeze_head,
+            plot_on_val=plot_on_val,
+            class_names=class_names,
+            test_dataloaders_names=test_dataloaders_names,
+            lr_overrides=lr_overrides,
+            path_to_record_metrics=path_to_record_metrics,
+        )
 
         self._y_buf: list[np.ndarray] = []
         self._validate_decoder()
